@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: signavio.deployment
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app:  signavio_app1
+    template:
+        metadata:
+            labels:
+                app: signavio_app1
+        spec:
+            containers:
+              - name: app1 
+                image: docker.io/sreekesh52/signavio_app1:latest
+                imagePullPolicy: IfNotPresent
+                ports:
+                   - containerPort: 9090
+
+---
+    apiVersion: v1
+    kind: Service
+    metadata:
+        name: signavio-service
+    spec:
+        selector:
+            app: signavio_app1
+        type: NodePort
+        ports:
+            - protocol: TCP
+              port: 9090
+              targetPort: 9090
+              nodePort: 31100
+---
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: signavio.ingress
+      namespace: default
+    spec:
+      rules:
+        - host: signavioapp.com
+          http:
+            paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: signavio-service
+                  port:
+                    number: 9090
